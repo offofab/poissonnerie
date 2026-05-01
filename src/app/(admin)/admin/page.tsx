@@ -91,6 +91,26 @@ export default async function AdminPage() {
           + Nouvelle commande
         </Link>
 
+        {/* Navigation rapide */}
+        <div className="grid grid-cols-4 gap-2">
+          <Link href="/admin/stats" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
+            <p className="text-xl">📊</p>
+            <p className="text-xs font-medium text-slate-700 mt-1">Stats</p>
+          </Link>
+          <Link href="/admin/clients" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
+            <p className="text-xl">👥</p>
+            <p className="text-xs font-medium text-slate-700 mt-1">Clients</p>
+          </Link>
+          <Link href="/admin/fournisseurs" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
+            <p className="text-xl">🚚</p>
+            <p className="text-xs font-medium text-slate-700 mt-1">Fourniss.</p>
+          </Link>
+          <Link href="/admin/equipe" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
+            <p className="text-xl">🧑‍🔧</p>
+            <p className="text-xs font-medium text-slate-700 mt-1">Équipe</p>
+          </Link>
+        </div>
+
         {/* Arrivages en brouillon (à compléter) */}
         {draftArrivals.length > 0 && (
           <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
