@@ -61,68 +61,86 @@ export default async function AdminPage() {
     products: a.products.map((p) => ({ id: p.id, name: p.name })),
   }));
 
+  const heure = new Date().getHours();
+  const salutation = heure < 12 ? "Bonjour" : heure < 18 ? "Bon après-midi" : "Bonsoir";
+
   return (
-    <main className="min-h-screen bg-slate-50 pb-24">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-24">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
+      <header className="bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
-          <div>
-            <h1 className="text-lg font-bold text-slate-800">🐟 APL Poissonnerie</h1>
-            <p className="text-xs text-slate-500">Bonjour {session.user.fullName}</p>
-          </div>
           <div className="flex items-center gap-3">
-            <Link href="/admin/arrivages" className="text-sm text-blue-600 font-medium">
-              Arrivages
-            </Link>
-            <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
-              <button type="submit" className="text-sm text-slate-400">Déco.</button>
-            </form>
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-xl shadow-md shadow-blue-200">
+              🐟
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-slate-800 leading-tight">APL Poissonnerie</h1>
+              <p className="text-xs text-slate-500">{salutation} {session.user.fullName.split(" ")[0]}</p>
+            </div>
           </div>
+          <form action={async () => { "use server"; await signOut({ redirectTo: "/login" }); }}>
+            <button type="submit" className="text-xs text-slate-400 hover:text-slate-600 transition px-2 py-1">
+              Déconnexion
+            </button>
+          </form>
         </div>
       </header>
 
-      <div className="px-4 pt-4 space-y-4 max-w-2xl mx-auto">
+      <div className="px-4 pt-5 space-y-5 max-w-2xl mx-auto">
 
         {/* BOUTON NOUVELLE COMMANDE — priorité absolue */}
         <Link
           href="/admin/commandes/nouvelle"
-          className="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl text-center text-lg shadow-lg shadow-blue-200 transition-colors"
+          className="group block w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-5 rounded-2xl text-center text-lg shadow-lg shadow-blue-200 transition active:scale-[0.99]"
         >
-          + Nouvelle commande
+          <span className="inline-flex items-center gap-2">
+            <span className="text-2xl group-hover:rotate-90 transition">+</span>
+            Nouvelle commande
+          </span>
         </Link>
 
         {/* Navigation rapide */}
         <div className="grid grid-cols-4 gap-2">
-          <Link href="/admin/stats" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
-            <p className="text-xl">📊</p>
-            <p className="text-xs font-medium text-slate-700 mt-1">Stats</p>
-          </Link>
-          <Link href="/admin/clients" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
-            <p className="text-xl">👥</p>
-            <p className="text-xs font-medium text-slate-700 mt-1">Clients</p>
-          </Link>
-          <Link href="/admin/fournisseurs" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
-            <p className="text-xl">🚚</p>
-            <p className="text-xs font-medium text-slate-700 mt-1">Fourniss.</p>
-          </Link>
-          <Link href="/admin/equipe" className="bg-white rounded-2xl border border-slate-200 py-3 text-center">
-            <p className="text-xl">🧑‍🔧</p>
-            <p className="text-xs font-medium text-slate-700 mt-1">Équipe</p>
-          </Link>
+          {[
+            { href: "/admin/arrivages", icon: "📦", label: "Arrivages" },
+            { href: "/admin/stats", icon: "📊", label: "Stats" },
+            { href: "/admin/clients", icon: "👥", label: "Clients" },
+            { href: "/admin/fournisseurs", icon: "🚚", label: "Fourniss." },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="bg-white rounded-2xl border border-slate-200 py-3 text-center hover:border-blue-300 hover:shadow-md hover:shadow-blue-100 transition"
+            >
+              <p className="text-2xl">{item.icon}</p>
+              <p className="text-xs font-medium text-slate-700 mt-1">{item.label}</p>
+            </Link>
+          ))}
         </div>
+        <Link
+          href="/admin/equipe"
+          className="block bg-white rounded-2xl border border-slate-200 px-4 py-3 hover:border-blue-300 transition flex items-center justify-between"
+        >
+          <span className="flex items-center gap-3">
+            <span className="text-xl">🧑‍🔧</span>
+            <span className="text-sm font-medium text-slate-700">Gestion équipe</span>
+          </span>
+          <span className="text-slate-400">→</span>
+        </Link>
 
         {/* Arrivages en brouillon (à compléter) */}
         {draftArrivals.length > 0 && (
-          <div className="bg-orange-50 rounded-2xl p-4 border border-orange-200">
-            <h2 className="font-semibold text-orange-800 mb-3">
-              ⚠ À compléter ({draftArrivals.length})
+          <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl p-4 border border-orange-200">
+            <h2 className="font-semibold text-orange-800 mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center font-bold">!</span>
+              À compléter ({draftArrivals.length})
             </h2>
             <div className="space-y-2">
               {draftArrivals.map((a) => (
                 <Link
                   key={a.id}
                   href={`/admin/arrivages/${a.id}`}
-                  className="flex items-center justify-between bg-white rounded-xl px-3 py-2 border border-orange-100"
+                  className="flex items-center justify-between bg-white rounded-xl px-3 py-2.5 border border-orange-100 hover:border-orange-300 transition"
                 >
                   <div>
                     <p className="font-medium text-slate-800 text-sm">{a.supplier.name}</p>
@@ -131,7 +149,7 @@ export default async function AdminPage() {
                       {" · "}{a.products.length} produit{a.products.length > 1 ? "s" : ""}
                     </p>
                   </div>
-                  <span className="text-orange-600 text-sm">→ Compléter</span>
+                  <span className="text-orange-600 text-sm font-medium">Compléter →</span>
                 </Link>
               ))}
             </div>
@@ -141,15 +159,22 @@ export default async function AdminPage() {
         {/* Stock disponible par arrivage actif */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-bold text-slate-800">Stock disponible</h2>
-            <span className="text-sm text-slate-500">{openArrivals.length} arrivage{openArrivals.length > 1 ? "s" : ""} actif{openArrivals.length > 1 ? "s" : ""}</span>
+            <h2 className="font-bold text-slate-800 text-lg">Stock disponible</h2>
+            <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+              {openArrivals.length} actif{openArrivals.length > 1 ? "s" : ""}
+            </span>
           </div>
 
           {openArrivals.length === 0 ? (
-            <div className="bg-white rounded-2xl p-6 text-center border border-slate-200">
-              <p className="text-slate-400">Aucun arrivage actif</p>
-              <Link href="/admin/arrivages" className="text-blue-600 text-sm font-medium block mt-2">
-                Gérer les arrivages →
+            <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
+              <p className="text-4xl mb-2">📦</p>
+              <p className="font-medium text-slate-700">Aucun arrivage actif</p>
+              <p className="text-sm text-slate-400 mt-1">Crée un arrivage pour ajouter du stock.</p>
+              <Link
+                href="/admin/arrivages/nouveau"
+                className="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
+              >
+                + Nouvel arrivage
               </Link>
             </div>
           ) : (

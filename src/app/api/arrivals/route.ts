@@ -37,14 +37,18 @@ export async function POST(req: NextRequest) {
   if (error || !session) return error;
 
   const body = await req.json();
-  const { supplierId, arrivalDate, notes, products } = body as {
+  const { supplierId, arrivalDate, notes, products, expenses, status } = body as {
     supplierId: string;
     arrivalDate: string;
     notes?: string;
+    expenses?: number;
+    status?: "DRAFT" | "OPEN";
     products: Array<{
       name: string;
       format?: string;
       totalWeightKg: number;
+      purchasePriceKg?: number;
+      baseSalePriceKg?: number;
     }>;
   };
 
@@ -52,18 +56,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Champs requis manquants" }, { status: 400 });
   }
 
+  const isAdmin = session.user.role === "ADMIN";
+  const finalStatus = isAdmin && status === "OPEN" ? "OPEN" : "DRAFT";
+
   const arrival = await prisma.arrival.create({
     data: {
       supplierId,
       arrivalDate: new Date(arrivalDate),
       notes,
-      status: "DRAFT",
+      expenses: isAdmin && expenses ? expenses : 0,
+      status: finalStatus,
       products: {
         create: products.map((p) => ({
           name: p.name,
           format: p.format,
           totalWeightKg: p.totalWeightKg,
           remainingWeightKg: p.totalWeightKg,
+          purchasePriceKg: isAdmin ? p.purchasePriceKg : undefined,
+          baseSalePriceKg: isAdmin ? p.baseSalePriceKg : undefined,
         })),
       },
     },

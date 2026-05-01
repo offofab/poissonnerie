@@ -23,20 +23,34 @@ export default async function ArrivagesListPage() {
   });
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-8">
-      <header className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-8">
+      <header className="bg-white/95 backdrop-blur border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-3">
-            <Link href="/admin" className="text-slate-500 text-lg">←</Link>
+            <Link href="/admin" className="text-slate-500 text-xl hover:text-slate-700 transition">←</Link>
             <h1 className="text-lg font-bold text-slate-800">Arrivages</h1>
           </div>
+          <Link
+            href="/admin/arrivages/nouveau"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-semibold px-4 py-2 rounded-xl shadow-sm shadow-blue-200 transition"
+          >
+            + Nouveau
+          </Link>
         </div>
       </header>
 
       <div className="px-4 pt-4 space-y-3 max-w-2xl mx-auto">
         {arrivals.length === 0 ? (
-          <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
-            <p className="text-slate-400">Aucun arrivage enregistré</p>
+          <div className="bg-white rounded-2xl p-10 text-center border border-slate-200">
+            <p className="text-5xl mb-3">📦</p>
+            <p className="font-medium text-slate-700">Aucun arrivage enregistré</p>
+            <p className="text-sm text-slate-400 mt-1">Crée ton premier arrivage pour commencer.</p>
+            <Link
+              href="/admin/arrivages/nouveau"
+              className="inline-block mt-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2 rounded-xl transition"
+            >
+              + Nouvel arrivage
+            </Link>
           </div>
         ) : (
           arrivals.map((a) => {
