@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
         items: { include: { arrivalProduct: { include: { category: true } } } },
         collections: { where: { status: "VALIDATED" } },
         deliveryZone: { select: { name: true } },
+        customer: { select: { id: true, name: true } },
       },
     }),
     prisma.order.findMany({
@@ -200,6 +201,21 @@ export async function GET(req: NextRequest) {
     .sort((a, b) => b.ca - a.ca)
     .slice(0, 8);
 
+  // === CA par client ===
+  const clientMap = new Map<string, { ca: number; count: number; id: string }>();
+  for (const o of orders) {
+    const id = o.customer.id;
+    const name = o.customer.name;
+    const cur = clientMap.get(name) ?? { ca: 0, count: 0, id };
+    cur.ca += Number(o.totalAmount);
+    cur.count += 1;
+    clientMap.set(name, cur);
+  }
+  const caByClient = Array.from(clientMap.entries())
+    .map(([name, v]) => ({ name, ca: Math.round(v.ca), count: v.count, id: v.id }))
+    .sort((a, b) => b.ca - a.ca)
+    .slice(0, 10);
+
   // === Top produits (kg vendus) ===
   const productMap = new Map<string, { kg: number; ca: number; emoji: string | null }>();
   for (const o of orders) {
@@ -256,6 +272,7 @@ export async function GET(req: NextRequest) {
     dailySeries,
     caByZone,
     caByCategory,
+    caByClient,
     topProducts,
     stockByCategory,
     topDebiteurs: customers.slice(0, 10).map((c) => ({

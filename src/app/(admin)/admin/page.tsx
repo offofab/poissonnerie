@@ -107,7 +107,7 @@ export default async function AdminPage() {
             { href: "/admin/clients", icon: "👥", label: "Clients" },
             { href: "/admin/fournisseurs", icon: "🚚", label: "Fourniss." },
             { href: "/admin/stats", icon: "📊", label: "Stats" },
-            { href: "/admin/equipe", icon: "🧑‍🔧", label: "Équipe" },
+            { href: "/admin/parametres", icon: "⚙️", label: "Paramètres" },
           ].map((item) => (
             <Link
               key={item.href}

@@ -19,6 +19,7 @@ interface ArrivageStat {
 interface MonthData { month: string; ca: number; count: number }
 interface DailyPoint { date: string; label: string; ca: number; count: number }
 interface NamedAmount { name: string; ca: number; emoji?: string | null }
+interface ClientAmount { name: string; ca: number; count: number; id: string }
 interface TopProduct { name: string; kg: number; ca: number; emoji: string | null }
 interface StockCat { name: string; emoji: string | null; remainingKg: number; totalKg: number }
 interface Debiteur { id: string; name: string; phone: string | null; balanceDue: number }
@@ -35,6 +36,7 @@ interface Stats {
   dailySeries: DailyPoint[];
   caByZone: NamedAmount[];
   caByCategory: NamedAmount[];
+  caByClient: ClientAmount[];
   topProducts: TopProduct[];
   stockByCategory: StockCat[];
   topDebiteurs: Debiteur[];
@@ -50,6 +52,7 @@ export default function StatsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [breakdownView, setBreakdownView] = useState<"category" | "client">("category");
 
   useEffect(() => {
     setLoading(true);
@@ -193,20 +196,40 @@ export default function StatsPage() {
               </ResponsiveContainer>
             </Tile>
 
-            <Tile span="col-span-12 lg:col-span-6" title="CA par catégorie">
-              {stats.caByCategory.length === 0 ? (
-                <EmptyChart />
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={stats.caByCategory} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
-                    <XAxis type="number" tick={{ fontSize: 10, fill: "#64748b" }} tickFormatter={FCFAk} />
-                    <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#475569" }} width={80} />
-                    <Tooltip formatter={(v) => FCFA(Number(v))} contentStyle={{ borderRadius: 12, fontSize: 12 }} />
-                    <Bar dataKey="ca" fill="#06b6d4" radius={[0, 8, 8, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
+            <Tile
+              span="col-span-12 lg:col-span-6"
+              title="CA — répartition"
+              action={
+                <div className="flex gap-1 bg-slate-100 rounded-lg p-0.5">
+                  {(["category", "client"] as const).map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setBreakdownView(v)}
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${breakdownView === v ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"}`}
+                    >
+                      {v === "category" ? "Catégorie" : "Client"}
+                    </button>
+                  ))}
+                </div>
+              }
+            >
+              {(() => {
+                const data = breakdownView === "category"
+                  ? stats.caByCategory.map((c) => ({ name: c.name, ca: c.ca }))
+                  : stats.caByClient.map((c) => ({ name: c.name, ca: c.ca }));
+                if (data.length === 0) return <EmptyChart />;
+                return (
+                  <ResponsiveContainer width="100%" height={220}>
+                    <BarChart data={data} layout="vertical" margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 10, fill: "#64748b" }} tickFormatter={FCFAk} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: "#475569" }} width={90} />
+                      <Tooltip formatter={(v) => FCFA(Number(v))} contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+                      <Bar dataKey="ca" fill={breakdownView === "category" ? "#06b6d4" : "#8b5cf6"} radius={[0, 8, 8, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                );
+              })()}
             </Tile>
 
             {/* === ROW 4 — Top produits (kg) + Stock par cat === */}
@@ -372,10 +395,13 @@ function KpiTile({
   );
 }
 
-function Tile({ span, title, children }: { span: string; title: string; children: React.ReactNode }) {
+function Tile({ span, title, children, action }: { span: string; title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className={`${span} bg-white rounded-2xl p-4 shadow-sm border border-slate-200`}>
-      <h3 className="text-sm font-semibold text-slate-700 mb-3">{title}</h3>
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+        {action}
+      </div>
       {children}
     </div>
   );

@@ -1,13 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const poppins = Poppins({
+  variable: "--font-poppins",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -34,8 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" className={`${geistSans.variable} h-full`}>
-      <body className="min-h-full flex flex-col bg-slate-50 antialiased">
+    <html lang="fr" className={`${poppins.variable} h-full`}>
+      <body className="min-h-full flex flex-col bg-slate-50 antialiased font-sans">
         <SessionProvider>
           <ServiceWorkerRegistrar />
           {children}
