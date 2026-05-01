@@ -100,12 +100,14 @@ export default async function AdminPage() {
         </Link>
 
         {/* Navigation rapide */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
             { href: "/admin/arrivages", icon: "📦", label: "Arrivages" },
-            { href: "/admin/stats", icon: "📊", label: "Stats" },
+            { href: "/admin/categories", icon: "🏷️", label: "Catégories" },
             { href: "/admin/clients", icon: "👥", label: "Clients" },
             { href: "/admin/fournisseurs", icon: "🚚", label: "Fourniss." },
+            { href: "/admin/stats", icon: "📊", label: "Stats" },
+            { href: "/admin/equipe", icon: "🧑‍🔧", label: "Équipe" },
           ].map((item) => (
             <Link
               key={item.href}
@@ -117,16 +119,6 @@ export default async function AdminPage() {
             </Link>
           ))}
         </div>
-        <Link
-          href="/admin/equipe"
-          className="block bg-white rounded-2xl border border-slate-200 px-4 py-3 hover:border-blue-300 transition flex items-center justify-between"
-        >
-          <span className="flex items-center gap-3">
-            <span className="text-xl">🧑‍🔧</span>
-            <span className="text-sm font-medium text-slate-700">Gestion équipe</span>
-          </span>
-          <span className="text-slate-400">→</span>
-        </Link>
 
         {/* Arrivages en brouillon (à compléter) */}
         {draftArrivals.length > 0 && (

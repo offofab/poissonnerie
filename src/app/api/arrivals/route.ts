@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     products: Array<{
       name: string;
       format?: string;
+      categoryId?: string;
       totalWeightKg: number;
       purchasePriceKg?: number;
       baseSalePriceKg?: number;
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
         create: products.map((p) => ({
           name: p.name,
           format: p.format,
+          categoryId: p.categoryId,
           totalWeightKg: p.totalWeightKg,
           remainingWeightKg: p.totalWeightKg,
           purchasePriceKg: isAdmin ? p.purchasePriceKg : undefined,

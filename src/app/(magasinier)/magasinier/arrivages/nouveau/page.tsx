@@ -5,25 +5,28 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface Supplier { id: string; name: string }
-interface ProductLine { name: string; format: string; totalWeightKg: string }
+interface Category { id: string; name: string; emoji: string | null }
+interface ProductLine { categoryId: string; name: string; format: string; totalWeightKg: string }
 
 export default function NouvelArrivagePage() {
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [supplierId, setSupplierId] = useState("");
   const [newSupplierName, setNewSupplierName] = useState("");
   const [showNewSupplier, setShowNewSupplier] = useState(false);
   const [arrivalDate, setArrivalDate] = useState(new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState("");
-  const [products, setProducts] = useState<ProductLine[]>([{ name: "", format: "", totalWeightKg: "" }]);
+  const [products, setProducts] = useState<ProductLine[]>([{ categoryId: "", name: "", format: "", totalWeightKg: "" }]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/suppliers").then((r) => r.json()).then(setSuppliers);
+    fetch("/api/categories").then((r) => r.json()).then(setCategories);
   }, []);
 
   function addProduct() {
-    setProducts([...products, { name: "", format: "", totalWeightKg: "" }]);
+    setProducts([...products, { categoryId: "", name: "", format: "", totalWeightKg: "" }]);
   }
 
   function removeProduct(i: number) {
@@ -66,6 +69,7 @@ export default function NouvelArrivagePage() {
           products: products
             .filter((p) => p.name && p.totalWeightKg)
             .map((p) => ({
+              categoryId: p.categoryId || undefined,
               name: p.name,
               format: p.format || undefined,
               totalWeightKg: parseFloat(p.totalWeightKg),
@@ -163,6 +167,22 @@ export default function NouvelArrivagePage() {
                   </button>
                 )}
               </div>
+              {categories.length > 0 && (
+                <select
+                  value={p.categoryId}
+                  onChange={(e) => {
+                    updateProduct(i, "categoryId", e.target.value);
+                    const cat = categories.find((c) => c.id === e.target.value);
+                    if (cat && !p.name) updateProduct(i, "name", cat.name);
+                  }}
+                  className="w-full px-3 py-3 rounded-xl border border-slate-300 text-slate-800 bg-white text-base"
+                >
+                  <option value="">— Catégorie —</option>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ""}{c.name}</option>
+                  ))}
+                </select>
+              )}
               <input
                 type="text"
                 placeholder="Nom (ex: Carpes, Gambas…)"

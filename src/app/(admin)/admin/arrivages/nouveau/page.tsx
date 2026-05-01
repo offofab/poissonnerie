@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface Supplier { id: string; name: string }
+interface Category { id: string; name: string; emoji: string | null }
 interface ProductLine {
+  categoryId: string;
   name: string;
   format: string;
   totalWeightKg: string;
@@ -16,6 +18,7 @@ interface ProductLine {
 export default function AdminNouvelArrivagePage() {
   const router = useRouter();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [supplierId, setSupplierId] = useState("");
   const [newSupplierName, setNewSupplierName] = useState("");
   const [showNewSupplier, setShowNewSupplier] = useState(false);
@@ -23,16 +26,47 @@ export default function AdminNouvelArrivagePage() {
   const [notes, setNotes] = useState("");
   const [expenses, setExpenses] = useState("");
   const [products, setProducts] = useState<ProductLine[]>([
-    { name: "", format: "", totalWeightKg: "", purchasePriceKg: "", baseSalePriceKg: "" },
+    { categoryId: "", name: "", format: "", totalWeightKg: "", purchasePriceKg: "", baseSalePriceKg: "" },
   ]);
   const [loading, setLoading] = useState(false);
+  const [newCategoryFor, setNewCategoryFor] = useState<number | null>(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryEmoji, setNewCategoryEmoji] = useState("");
+
+  async function loadCategories() {
+    const res = await fetch("/api/categories");
+    if (res.ok) setCategories(await res.json());
+  }
 
   useEffect(() => {
     fetch("/api/suppliers").then((r) => r.json()).then(setSuppliers);
+    loadCategories();
   }, []);
 
   function addProduct() {
-    setProducts([...products, { name: "", format: "", totalWeightKg: "", purchasePriceKg: "", baseSalePriceKg: "" }]);
+    setProducts([...products, { categoryId: "", name: "", format: "", totalWeightKg: "", purchasePriceKg: "", baseSalePriceKg: "" }]);
+  }
+
+  async function createCategory(productIdx: number) {
+    if (!newCategoryName.trim()) return;
+    const res = await fetch("/api/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newCategoryName.trim(), emoji: newCategoryEmoji.trim() || undefined }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      toast.error(err.error ?? "Erreur création catégorie");
+      return;
+    }
+    const cat = await res.json();
+    await loadCategories();
+    updateProduct(productIdx, "categoryId", cat.id);
+    if (!products[productIdx].name) updateProduct(productIdx, "name", cat.name);
+    setNewCategoryFor(null);
+    setNewCategoryName("");
+    setNewCategoryEmoji("");
+    toast.success("Catégorie créée");
   }
 
   function removeProduct(i: number) {
@@ -89,6 +123,7 @@ export default function AdminNouvelArrivagePage() {
           expenses: expensesNum || undefined,
           status: openImmediately ? "OPEN" : "DRAFT",
           products: validProducts.map((p) => ({
+            categoryId: p.categoryId || undefined,
             name: p.name,
             format: p.format || undefined,
             totalWeightKg: parseFloat(p.totalWeightKg),
@@ -198,9 +233,64 @@ export default function AdminNouvelArrivagePage() {
                   </button>
                 )}
               </div>
+
+              {/* Catégorie */}
+              {newCategoryFor === i ? (
+                <div className="bg-blue-50 rounded-xl p-3 space-y-2 border border-blue-200">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="🐟"
+                      value={newCategoryEmoji}
+                      onChange={(e) => setNewCategoryEmoji(e.target.value)}
+                      maxLength={2}
+                      className="w-14 text-center px-2 py-2 rounded-lg border border-slate-300 text-base"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Nom de la catégorie (ex: Carpes)"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-base focus:border-blue-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" onClick={() => createCategory(i)}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 rounded-lg transition">
+                      Créer la catégorie
+                    </button>
+                    <button type="button" onClick={() => { setNewCategoryFor(null); setNewCategoryName(""); setNewCategoryEmoji(""); }}
+                      className="px-4 text-slate-500 text-sm hover:text-slate-700">
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <select
+                    value={p.categoryId}
+                    onChange={(e) => {
+                      updateProduct(i, "categoryId", e.target.value);
+                      const cat = categories.find((c) => c.id === e.target.value);
+                      if (cat && !p.name) updateProduct(i, "name", cat.name);
+                    }}
+                    className="flex-1 px-3 py-3 rounded-xl border border-slate-300 text-slate-800 bg-white text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition"
+                  >
+                    <option value="">— Catégorie —</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.emoji ? `${c.emoji} ` : ""}{c.name}</option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={() => setNewCategoryFor(i)}
+                    className="px-3 rounded-xl border-2 border-dashed border-slate-300 text-slate-500 text-lg hover:border-blue-400 hover:text-blue-600 transition">
+                    +
+                  </button>
+                </div>
+              )}
+
               <input
                 type="text"
-                placeholder="Nom (ex: Carpes, Gambas…)"
+                placeholder="Nom affiché (ex: Carpes, Gambas…)"
                 value={p.name}
                 onChange={(e) => updateProduct(i, "name", e.target.value)}
                 required

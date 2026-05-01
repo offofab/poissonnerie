@@ -107,6 +107,7 @@ model Arrival {
 model ArrivalProduct {
   id                String   @id @default(uuid())
   arrivalId         String
+  categoryId        String?
   name              String
   format            String?
   totalWeightKg     Decimal  @db.Decimal(10, 3)
@@ -116,8 +117,21 @@ model ArrivalProduct {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  arrival    Arrival     @relation(fields: [arrivalId], references: [id])
+  arrival    Arrival          @relation(fields: [arrivalId], references: [id])
+  category   ProductCategory? @relation(fields: [categoryId], references: [id])
   orderItems OrderItem[]
+
+  @@index([categoryId])
+}
+
+model ProductCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  emoji     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  products ArrivalProduct[]
 }
 
 model DeliveryZone {
