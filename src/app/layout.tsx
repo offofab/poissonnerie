@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default function RootLayout({
         <SessionProvider>
           <ServiceWorkerRegistrar />
           {children}
+          <Toaster position="top-center" richColors />
         </SessionProvider>
       </body>
     </html>
