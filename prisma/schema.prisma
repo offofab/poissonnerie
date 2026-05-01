@@ -74,6 +74,7 @@ model User {
   ordersAssigned    Order[]             @relation("AssignedTo")
   paymentsCollected PaymentCollection[] @relation("CollectedBy")
   paymentsValidated PaymentCollection[] @relation("ValidatedBy")
+  pushSubscriptions PushSubscription[]
 }
 
 model Supplier {
@@ -204,6 +205,17 @@ model PaymentCollection {
   order       Order  @relation(fields: [orderId], references: [id])
   collectedBy User   @relation("CollectedBy", fields: [collectedById], references: [id])
   validatedBy User?  @relation("ValidatedBy", fields: [validatedById], references: [id])
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model WhatsappNotification {
