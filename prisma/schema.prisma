@@ -1,0 +1,223 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MAGASINIER
+  LIVREUR
+}
+
+enum ArrivalStatus {
+  DRAFT
+  OPEN
+  CLOSED
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  PICKED_UP
+  DELIVERING
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentType {
+  PREPAID
+  ON_DELIVERY
+  CREDIT
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+}
+
+enum CollectionStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+enum NotifType {
+  ORDER_READY
+  DELIVERED
+  PAYMENT_REMINDER
+  PAYMENT_CONFIRMED
+}
+
+enum NotifStatus {
+  SENT
+  FAILED
+  PENDING
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  fullName  String
+  role      Role
+  phone     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ordersCreated     Order[]             @relation("CreatedBy")
+  ordersAssigned    Order[]             @relation("AssignedTo")
+  paymentsCollected PaymentCollection[] @relation("CollectedBy")
+  paymentsValidated PaymentCollection[] @relation("ValidatedBy")
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  name      String
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  arrivals Arrival[]
+}
+
+model Arrival {
+  id           String        @id @default(uuid())
+  supplierId   String
+  arrivalDate  DateTime
+  status       ArrivalStatus @default(DRAFT)
+  totalCost    Decimal?      @db.Decimal(12, 2)
+  expenses     Decimal       @default(0) @db.Decimal(12, 2)
+  totalRevenue Decimal       @default(0) @db.Decimal(12, 2)
+  totalProfit  Decimal       @default(0) @db.Decimal(12, 2)
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  supplier Supplier         @relation(fields: [supplierId], references: [id])
+  products ArrivalProduct[]
+}
+
+model ArrivalProduct {
+  id                String   @id @default(uuid())
+  arrivalId         String
+  name              String
+  format            String?
+  totalWeightKg     Decimal  @db.Decimal(10, 3)
+  remainingWeightKg Decimal  @db.Decimal(10, 3)
+  purchasePriceKg   Decimal? @db.Decimal(10, 2)
+  baseSalePriceKg   Decimal? @db.Decimal(10, 2)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  arrival    Arrival     @relation(fields: [arrivalId], references: [id])
+  orderItems OrderItem[]
+}
+
+model DeliveryZone {
+  id        String   @id @default(uuid())
+  name      String
+  fee       Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Customer {
+  id         String   @id @default(uuid())
+  name       String
+  phone      String?
+  address    String?
+  isVip      Boolean  @default(false)
+  isInternal Boolean  @default(false)
+  balanceDue Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orders        Order[]
+  notifications WhatsappNotification[]
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  customerId      String
+  createdById     String
+  assignedToId    String?
+  status          OrderStatus @default(PENDING)
+  deliveryZoneId  String?
+  deliveryFee     Decimal     @default(0) @db.Decimal(10, 2)
+  deliveryAddress String?
+  paymentType     PaymentType @default(ON_DELIVERY)
+  totalAmount     Decimal     @db.Decimal(12, 2)
+  amountPaid      Decimal     @default(0) @db.Decimal(12, 2)
+  deliveryFeePaid Boolean     @default(false)
+  balanceDue      Decimal     @db.Decimal(12, 2)
+  notes           String?
+  deliveredAt     DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  customer      Customer              @relation(fields: [customerId], references: [id])
+  createdBy     User                  @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo    User?                 @relation("AssignedTo", fields: [assignedToId], references: [id])
+  deliveryZone  DeliveryZone?         @relation(fields: [deliveryZoneId], references: [id])
+  items         OrderItem[]
+  collections   PaymentCollection[]
+  notifications WhatsappNotification[]
+}
+
+model OrderItem {
+  id               String   @id @default(uuid())
+  orderId          String
+  arrivalProductId String
+  weightKg         Decimal  @db.Decimal(10, 3)
+  unitPriceKg      Decimal  @db.Decimal(10, 2)
+  subtotal         Decimal  @db.Decimal(12, 2)
+  isDiscounted     Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  order          Order          @relation(fields: [orderId], references: [id])
+  arrivalProduct ArrivalProduct @relation(fields: [arrivalProductId], references: [id])
+}
+
+model PaymentCollection {
+  id            String           @id @default(uuid())
+  orderId       String
+  collectedById String
+  productAmount Decimal?         @db.Decimal(12, 2)
+  deliveryAmount Decimal?        @db.Decimal(12, 2)
+  method        PaymentMethod    @default(CASH)
+  collectedAt   DateTime         @default(now())
+  status        CollectionStatus @default(PENDING)
+  validatedById String?
+  validatedAt   DateTime?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  order       Order  @relation(fields: [orderId], references: [id])
+  collectedBy User   @relation("CollectedBy", fields: [collectedById], references: [id])
+  validatedBy User?  @relation("ValidatedBy", fields: [validatedById], references: [id])
+}
+
+model WhatsappNotification {
+  id          String      @id @default(uuid())
+  customerId  String
+  orderId     String?
+  type        NotifType
+  message     String
+  status      NotifStatus @default(PENDING)
+  sentAt      DateTime?
+  reminderDay Int?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id])
+  order    Order?   @relation(fields: [orderId], references: [id])
+}
