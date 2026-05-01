@@ -7,7 +7,7 @@ import type {
   CollectionStatus,
   NotifType,
   NotifStatus,
-} from "@/generated/prisma";
+} from "@/generated/prisma/client";
 
 export type { Role, ArrivalStatus, OrderStatus, PaymentType, PaymentMethod, CollectionStatus, NotifType, NotifStatus };
 
